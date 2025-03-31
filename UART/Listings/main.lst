@@ -1,0 +1,80 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              03/31/2025 10:27:53 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\Program_Store\Application\KeilC\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTE
+                    -ND PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include <REGX51.H>
+   2          
+   3          void Uart_Init()
+   4          {
+   5   1        // Khoi tao UART o mode 1, 9600 baud
+   6   1        SM0 = 0; SM1 = 1;   // Chon UART mode 1
+   7   1        TMOD = 0x20;      // 0010 xxxx - Timer1 hoat dong o che do 8bit tu dong nap lai
+   8   1        TH1 = 0xFD;       // Toc do baud 9600
+   9   1        TR1 = 1;        // Timer1 bat dau chay
+  10   1        TI = 1;         // San sang gui du lieu
+  11   1        REN = 1;        // Cho phep nhan du lieu
+  12   1      }
+  13          
+  14          
+  15          // TI=1; khi gui du lieu thanh cong (phai tu set TI=0 de chan bi cho lan gui sau)
+  16          // RI=1; khi du lieu nhan thành công (phai tu set RI=0 de chan bi cho lan nhan sau)
+  17          
+  18          void Uart_Write_Char(char c)
+  19          {
+  20   1        while(TI == 0);
+  21   1        TI = 0;
+  22   1        SBUF = c;
+  23   1      }
+  24          
+  25          
+  26          void Uart_Write_String(char * str)
+  27          {
+  28   1        unsigned char i = 0;
+  29   1        while(str[i]!=0)
+  30   1        {
+  31   2          Uart_Write_Char(str[i]);
+  32   2          i++;
+  33   2        }
+  34   1      }
+  35          
+  36          char Uart_Data_Ready()
+  37          {
+  38   1        return RI;
+  39   1      }
+  40          
+  41          char Uart_Read()
+  42          {
+  43   1        RI = 0;
+  44   1        return SBUF;
+  45   1      }
+  46          
+  47          void main(){
+  48   1        Uart_Init();
+  49   1        //Uart_Write_Char('1');
+  50   1          Uart_Write_String("ABC123@\r");
+  51   1      
+  52   1      
+  53   1      
+  54   1      }
+C51 COMPILER V9.60.7.0   MAIN                                                              03/31/2025 10:27:53 PAGE 2   
+
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     80    ----
+   CONSTANT SIZE    =      9    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

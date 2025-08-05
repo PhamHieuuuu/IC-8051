@@ -1,0 +1,5 @@
+".\Objects\Main.obj",
+".\Objects\Thu_Vien_LCD.obj",
+".\Objects\Void_Function.obj" 
+TO ".\Objects\RTOS_rtx51tny" 
+PRINT(".\Listings\RTOS_rtx51tny.m51")

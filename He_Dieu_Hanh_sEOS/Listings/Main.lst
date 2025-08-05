@@ -1,0 +1,238 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              03/14/2025 10:00:16 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\Main.obj
+COMPILER INVOKED BY: D:\Program_Store\Application\KeilC\C51\BIN\C51.EXE Main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTE
+                    -ND PRINT(.\Listings\Main.lst) TABS(2) OBJECT(.\Objects\Main.obj)
+
+line level    source
+
+   1          #include <REGX51.H>
+   2          #include <Void_Function.h>
+   3          
+   4          #define MAX_TASKS 5  // So luong task toi da
+   5          
+   6          // Cau truc Task
+   7          typedef struct {
+   8              void (*taskFunc)(void);
+   9              unsigned int delay;
+  10          } Task;
+  11          
+  12          // Danh sach Task
+  13          Task taskList[MAX_TASKS];
+  14          
+  15          // Bien Task hien tai
+  16          unsigned char currentTask = 0;
+  17          
+  18          // Ham delay mo phong os_dly_wait()
+  19          void os_dly_wait(unsigned int time) {
+  20   1          taskList[currentTask].delay = time;
+  21   1      }
+  22          
+  23          // Task 1
+  24          void task1_readGas(void) {
+  25   1          readGas();
+  26   1          os_dly_wait(2); // Delay 2 tick (2 x 50ms = 100ms)
+  27   1      }
+  28          // Task 2
+  29          void task2_readLm35(void) {
+  30   1          readnhietdo(); 
+  31   1          os_dly_wait(20);  // Delay 20 tick (20 x 50ms = 1000ms)
+  32   1      }
+  33          
+  34          // Task 3
+  35          void task3_readLight(void) {
+  36   1          CambienAS(); 
+  37   1          os_dly_wait(10);  // Delay 10 tick (10 x 50ms = 500ms)
+  38   1      }
+  39          // Task 4
+  40          void task4_readButton(void) {
+  41   1          Button();
+  42   1          os_dly_wait(1);  // Delay 1 tick (1 x 50ms = 50ms)
+  43   1      }
+  44          // Task 5
+  45          void task5_CommunicationUART(void) {
+  46   1          Comunication_Uart();
+  47   1          os_dly_wait(100);  // Delay 100 tick (100 x 50ms = 5000ms)
+  48   1      }
+  49          
+  50          // Khoi tao danh sach Task
+  51          void os_task_init(void) {
+  52   1          taskList[0].taskFunc = task1_readGas;
+  53   1          taskList[0].delay = 0;
+  54   1      
+C51 COMPILER V9.60.7.0   MAIN                                                              03/14/2025 10:00:16 PAGE 2   
+
+  55   1          taskList[1].taskFunc = task2_readLm35; 
+  56   1          taskList[1].delay = 0;
+  57   1      
+  58   1          taskList[2].taskFunc = task3_readLight; 
+  59   1          taskList[2].delay = 0;
+  60   1      
+  61   1          taskList[3].taskFunc = task4_readButton;
+  62   1          taskList[3].delay = 0;
+  63   1      
+  64   1          taskList[4].taskFunc = task5_CommunicationUART;
+  65   1          taskList[4].delay = 0;
+  66   1      }
+  67          
+  68          // Bo dem tick moi 50ms (ISR Timer 0)
+  69          void Timer0_ISR(void) interrupt 1 {
+  70   1          unsigned char i;
+  71   1          for (i = 0; i < MAX_TASKS; i++) {
+  72   2              if (taskList[i].delay > 0) {
+  73   3                  taskList[i].delay--;  // Giam bo dem delay cua task
+  74   3              }
+  75   2          }
+  76   1          
+  77   1          // Reload Timer 0 de duy tri tan so ngat 50ms
+  78   1          TH0 = 0x3B;
+  79   1          TL0 = 0xF9;
+  80   1      }
+  81          
+  82          // 1 Tick se la 50ms
+  83          // Cau hinh Timer 0 de tao ngat moi 50ms
+  84          void os_init(void) {
+  85   1          TMOD |= 0x01; // Che do 16-bit Timer 0
+  86   1          TH0 = 0x3B; 
+  87   1          TL0 = 0xF9;
+  88   1          ET0 = 1;  // Bat ngat Timer 0
+  89   1          EA = 1;   // Cho phep ngat toan cuc
+  90   1          TR0 = 1;  // Bat Timer 0
+  91   1      }
+  92          
+  93          // Bo lap lich voi che do ngu
+  94          void os_scheduler(void) {
+  95   1          while (1) {
+  96   2              unsigned char i;
+  97   2              bit taskReady = 0;
+  98   2      
+  99   2              for (i = 0; i < MAX_TASKS; i++) {
+ 100   3                  if (taskList[i].delay == 0) {
+ 101   4                      currentTask = i;
+ 102   4                      taskList[i].taskFunc(); // Thuc hien task
+ 103   4                      taskReady = 1;// báo hieu co task san sang de khong vào che do sleep
+ 104   4                  }   
+ 105   3              }       
+ 106   2      
+ 107   2              // Neu khong co Task nao san sang -> Dua vi dieu khien vao che do Idle
+ 108   2              if (!taskReady) {
+ 109   3                  PCON |= 0x01;
+ 110   3              }
+ 111   2          }
+ 112   1      }
+ 113          
+ 114          // Ham main
+ 115          void main() {
+ 116   1          Uart_Init();
+C51 COMPILER V9.60.7.0   MAIN                                                              03/14/2025 10:00:16 PAGE 3   
+
+*** WARNING C206 IN LINE 116 OF Main.c: 'Uart_Init': missing function-prototype
+ 117   1          LCD_Init();
+*** WARNING C206 IN LINE 117 OF Main.c: 'LCD_Init': missing function-prototype
+ 118   1          os_init();       // Khoi tao he thong
+ 119   1          os_task_init();  // Khoi tao danh sach Task
+ 120   1          os_scheduler();  // Chay bo lap lich
+ 121   1      }
+ 122          
+ 123          
+ 124          
+ 125          
+ 126          
+ 127          
+ 128          
+ 129          
+ 130          
+ 131          
+ 132          
+ 133          
+ 134          
+ 135          
+ 136          
+ 137          
+ 138          
+ 139          
+ 140          
+ 141          
+ 142          
+ 143          
+ 144          
+ 145          
+ 146          
+ 147          
+ 148          
+ 149          
+ 150          
+ 151          
+ 152          
+ 153          
+ 154          
+ 155          
+ 156          
+ 157          
+ 158          
+ 159          
+ 160          
+ 161          
+ 162          
+ 163          
+ 164          
+ 165          
+ 166          
+ 167          
+ 168          
+ 169          
+ 170          
+ 171          
+ 172          
+ 173          
+ 174          
+ 175          
+ 176          
+C51 COMPILER V9.60.7.0   MAIN                                                              03/14/2025 10:00:16 PAGE 4   
+
+ 177          
+ 178          
+ 179          
+ 180          
+ 181          
+ 182          
+ 183          
+ 184          
+ 185          
+ 186          
+ 187          
+ 188          /*
+ 189          -------Giai thích bien TaskReady--------
+ 190          
+ 191                  for (i = 0; i < MAX_TASKS; i++) {
+ 192                      if (taskList[i].delay == 0) {
+ 193                          currentTask = i;
+ 194                          taskList[i].taskFunc(); // Thuc hien task
+ 195                          taskReady = 1;// báo hieu co task san sang de khong vào che do sleep (CO HAY KHONG CO DEU 
+             -DUOC)
+ 196                      }   // TaskReady có NV neu co it nhat 1 task duoc thuc hien khi het vong for
+ 197                  }       // Vi taskReady=1; 8051 se thuc hien quet 1 lan for nua de chac chan het task san sang
+ 198          
+ 199                  // Neu khong co Task nao san sang -> Dua vi dieu khien vao che do Idle
+ 200                  if (!taskReady) {
+ 201                      PCON |= 0x01;
+ 202                  }
+ 203              }
+ 204          
+ 205          */
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    299    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     26       1
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  2 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,265 @@
+C51 COMPILER V9.60.7.0   VOID_FUNCTION                                                     03/06/2025 21:13:00 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE VOID_FUNCTION
+OBJECT MODULE PLACED IN .\Objects\Void_Function.obj
+COMPILER INVOKED BY: D:\Program_Store\Application\KeilC\C51\BIN\C51.EXE Void_Function.c OPTIMIZE(8,SPEED) BROWSE DEBUG O
+                    -BJECTEXTEND PRINT(.\Listings\Void_Function.lst) TABS(2) OBJECT(.\Objects\Void_Function.obj)
+
+line level    source
+
+   1          #include <REGX51.H>
+   2          #include <Thu_Vien_LCD.h>
+   3          #include <UART.h>
+   4          #include <Void_Function.h>
+   5          
+   6          // Khai bao chan cho ADC0808
+   7          #define CL P2_0  
+   8          #define ST P2_1  // Muc 1 de chuyen doi
+   9          #define EOC P2_2 // Xuat muc 1 khi chuyen doi ADC xong
+  10          #define OE P2_3 // Muc 1 de doc gia tri Digital
+  11          #define ALE P2_4 // chot cong IN0-7
+  12          #define A P2_5 
+  13          #define B P2_6 
+  14          #define C P2_7 
+  15          #define Data_ADC P0
+  16          
+  17          // Khai báo chan Cho Cam bien
+  18          #define GAS P1_0
+  19          #define LIGHT P1_1
+  20          
+  21          // Khai bao chan relay
+  22          #define Relay1 P1_5
+  23          #define Relay2 P1_6
+  24          #define Relay3 P1_7
+  25          
+  26          // Set gia tri dat nguong Relay
+  27          unsigned char Set_Nhiet_Do=25;
+  28          unsigned char Set_Gas=0;
+  29          unsigned char Set_Light=0;
+  30          
+  31          // Bien luu gia tri cam bien
+  32          unsigned char LM35=0;
+  33          unsigned char  MQ2=0;
+  34          unsigned char  LDR=0;
+  35          
+  36          unsigned char i,j;
+  37          
+  38          void delay(int ms){
+  39   1       for(i=0;i<ms;i++)
+  40   1         for(j=0;j<125;j++); 
+  41   1      }
+  42          
+  43          // Các hàm Nv doc ADC
+  44          void Clock(){
+  45   1        CL=0;
+  46   1        CL=1;
+  47   1      }
+  48          void IN_x(unsigned char ad){
+  49   1        A = ad & 0x01;
+  50   1        B = ad & 0x02;
+  51   1        C = ad & 0x04;
+  52   1      }
+  53          unsigned char ADC_Read(unsigned char diachi){
+  54   1       unsigned char ketqua;
+C51 COMPILER V9.60.7.0   VOID_FUNCTION                                                     03/06/2025 21:13:00 PAGE 2   
+
+  55   1      
+  56   1        ST=1; //kich 1 xung 1 ve 0
+  57   1        Clock();
+  58   1        IN_x(diachi);// truyen dia chi chon IN
+  59   1        ALE=1;//kich 1 xung 1 ve 0
+  60   1        Clock();
+  61   1        ALE=0;
+  62   1        Clock();
+  63   1        ST=0;
+  64   1      
+  65   1        while(EOC==0) Clock();
+  66   1        OE=1;
+  67   1        ketqua=P0;
+  68   1        OE=0;
+  69   1        
+  70   1        return ketqua;
+  71   1      }
+  72          
+  73          // Doc nhiet do & xu ly relay 1 
+  74          void readnhietdo(){ 
+  75   1          LM35 = ADC_Read(0);
+  76   1          LM35 = LM35 / 0.512; // suy ra do C doc duoc
+  77   1        
+  78   1          if(LM35>=Set_Nhiet_Do){
+  79   2          Relay1=0;
+  80   2          }
+  81   1          else {
+  82   2          Relay1=1;
+  83   2          }
+  84   1      }
+  85          
+  86          // Doc cam bien anh sang & xu ly relay 2
+  87          void CambienAS(){
+  88   1          LDR = LIGHT;
+  89   1          
+  90   1         if(Set_Light==LDR){
+  91   2          Relay2=0;
+  92   2          }
+  93   1         else {
+  94   2          Relay2=1;
+  95   2          }
+  96   1      }
+  97          
+  98          
+  99          // Doc MQ2 & xu ly relay 3
+ 100          void readGas(){
+ 101   1        MQ2=GAS;
+ 102   1      
+ 103   1        if(Set_Gas==MQ2)
+ 104   1          Relay3=0;
+ 105   1        else 
+ 106   1          Relay3=1;
+ 107   1      }
+ 108          
+ 109          // Doc ADC nút nhan, thuc hien chuc nang dua len LCD
+ 110          // ADC: (+) 0 | (-) 128 | (MODE) 170 
+ 111          unsigned char  up_button=0;
+ 112          unsigned char  down_button=0;
+ 113          unsigned char  chon_mode=0;
+ 114          
+ 115          void Button(){
+ 116   1          switch (ADC_Read(1)){
+C51 COMPILER V9.60.7.0   VOID_FUNCTION                                                     03/06/2025 21:13:00 PAGE 3   
+
+ 117   2            case 0: up_button=1; delay(100); break;
+ 118   2            case 128: down_button=1; delay(100); break;     
+ 119   2            case 170: chon_mode++; delay(100); break;   } 
+ 120   1          if(chon_mode==4)
+ 121   1            chon_mode=0;
+ 122   1      
+ 123   1          if(chon_mode==0){ // che do 0
+ 124   2          LCD_Gotoxy(0, 0);
+ 125   2          LCD_Puts("     Chon Che Do    ");
+ 126   2          LCD_Gotoxy(0, 1);
+ 127   2          LCD_Puts("     ___________     ");
+ 128   2          LCD_Gotoxy(0, 2);
+ 129   2          LCD_Puts("                     ");
+ 130   2          LCD_Gotoxy(0, 3);
+ 131   2          LCD_Puts("   ---PhamHieuu---     ");
+ 132   2          } 
+ 133   1          
+ 134   1          else if(chon_mode==1){ // che do 1
+ 135   2          LCD_Gotoxy(0, 0);
+ 136   2          LCD_Puts("      Mode (1)     ");
+ 137   2          LCD_Gotoxy(0, 1);
+ 138   2          LCD_Puts("   Nhiet Do: ");        
+ 139   2          LCD_PutNumber(LM35);      
+ 140   2          LCD_Puts("'C     ");   
+ 141   2        
+ 142   2             LCD_Gotoxy(0, 2);
+ 143   2             LCD_Puts("    Cai Dat: ");
+ 144   2             LCD_PutNumber(Set_Nhiet_Do);
+ 145   2             LCD_Puts("'C");  
+ 146   2             if(up_button==1){ 
+ 147   3              Set_Nhiet_Do=Set_Nhiet_Do+1;
+ 148   3              LCD_Gotoxy(13, 2);
+ 149   3              LCD_PutNumber(Set_Nhiet_Do);
+ 150   3              LCD_Puts("'C"); 
+ 151   3              up_button=0;       
+ 152   3             }
+ 153   2             else if(down_button==1){ 
+ 154   3              Set_Nhiet_Do=Set_Nhiet_Do-1;
+ 155   3              LCD_Gotoxy(13, 2);
+ 156   3              LCD_PutNumber(Set_Nhiet_Do);
+ 157   3              LCD_Puts("'C"); 
+ 158   3              down_button=0;
+ 159   3              } 
+ 160   2        }
+ 161   1          
+ 162   1          else if(chon_mode==2){ // che do 2
+ 163   2          LCD_Gotoxy(0, 0);
+ 164   2          LCD_Puts("      Mode (2)     ");
+ 165   2          LCD_Gotoxy(0, 1);
+ 166   2          LCD_Puts("  Light Senser: ");         
+ 167   2          if(LDR==1)
+ 168   2          LCD_Puts("Sang");   
+ 169   2          else 
+ 170   2          LCD_Puts("Toi ");   
+ 171   2          
+ 172   2           if(up_button==1){ 
+ 173   3            Set_Light=1;
+ 174   3            up_button=0;       
+ 175   3           }
+ 176   2           else if(down_button==1){ 
+ 177   3            Set_Light=0;
+ 178   3            down_button=0;
+C51 COMPILER V9.60.7.0   VOID_FUNCTION                                                     03/06/2025 21:13:00 PAGE 4   
+
+ 179   3          }   
+ 180   2             LCD_Gotoxy(0, 2);
+ 181   2             LCD_Puts("    Cai Dat: ");
+ 182   2             if(Set_Light==1) LCD_Puts("Sang ");
+ 183   2             else LCD_Puts("Toi ");
+ 184   2          }
+ 185   1          
+ 186   1          else if(chon_mode==3){ // che do 3
+ 187   2          LCD_Gotoxy(0, 0);
+ 188   2          LCD_Puts("      Mode (3)     ");
+ 189   2          LCD_Gotoxy(0, 1);
+ 190   2          LCD_Puts("      GAS: ");        
+ 191   2          if(MQ2==1)
+ 192   2          LCD_Puts("YES      ");   
+ 193   2          else 
+ 194   2          LCD_Puts("NO       ");   
+ 195   2          
+ 196   2           if(up_button==1){ 
+ 197   3            Set_Gas=1;
+ 198   3            up_button=0;       
+ 199   3           }
+ 200   2           else if(down_button==1){ 
+ 201   3            Set_Gas=0;
+ 202   3            down_button=0;
+ 203   3            }
+ 204   2        
+ 205   2          LCD_Gotoxy(0, 2);
+ 206   2          LCD_Puts("    Cai Dat: ");    
+ 207   2           if(Set_Gas==1) LCD_Puts("YES    ");
+ 208   2           else LCD_Puts("NO    ");   
+ 209   2          }
+ 210   1      }
+ 211          
+ 212          // Gui du lieu UART
+ 213          void Comunication_Uart(){
+ 214   1          Uart_Write_String("MQ2: ");
+ 215   1          Uart_Write_Number(MQ2); // Gui giá tri MQ2
+ 216   1          Uart_Write_Char('\r'); // Xuong hàng
+ 217   1      
+ 218   1          Uart_Write_String("LM35: ");
+ 219   1          Uart_Write_Number((int)LM35); // Gui giá tri nhiet do LM35
+ 220   1          Uart_Write_String("'C"); 
+ 221   1          Uart_Write_Char('\r'); 
+ 222   1      
+ 223   1          Uart_Write_String("LDR: ");
+ 224   1          Uart_Write_Number(LDR); // Gui giá tri LDR
+ 225   1          Uart_Write_Char('\r'); 
+ 226   1          Uart_Write_Char('\r');
+ 227   1      }
+ 228          
+ 229          
+ 230          
+ 231          
+ 232          
+ 233          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    734    ----
+   CONSTANT SIZE    =    287    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+C51 COMPILER V9.60.7.0   VOID_FUNCTION                                                     03/06/2025 21:13:00 PAGE 5   
+
+   DATA SIZE        =     11    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

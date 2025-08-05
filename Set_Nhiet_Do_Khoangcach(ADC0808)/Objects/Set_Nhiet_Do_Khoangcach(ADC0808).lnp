@@ -1,0 +1,4 @@
+".\Objects\Main.obj",
+".\Objects\Thu_Vien_LCD.obj" 
+TO ".\Objects\Set_Nhiet_Do_Khoangcach(ADC0808)" 
+PRINT(".\Listings\Set_Nhiet_Do_Khoangcach(ADC0808).m51")

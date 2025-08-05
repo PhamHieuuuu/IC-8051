@@ -1,0 +1,119 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              04/22/2025 09:08:51 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\Program_Store\Application\KeilC\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTE
+                    -ND PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include <REGX51.H>
+   2          #include <Thu_Vien_LCD.h>
+   3          
+   4          #define INA1 P2_0
+   5          #define INA2 P2_1
+   6          #define INB1 P2_2
+   7          #define INB2 P2_3
+   8          
+   9          #define N P2_4
+  10          #define P P2_5
+  11          #define ON_OFF P2_6
+  12          
+  13          int i;
+  14          bit on_off = 0;   
+  15          unsigned char flag = 0;
+  16          
+  17          void delay(int ms){
+  18   1        for(i=0;i<ms;i++){
+  19   2        TMOD = 0x01;
+  20   2        TH0=0xFC;
+  21   2        TL0=0x66;
+  22   2        TR0=1;
+  23   2        while(TF0==0);
+  24   2        TR0=0;
+  25   2        TF0=0;
+  26   2          }
+  27   1        }
+  28          
+  29          void thuan(){
+  30   1        INA1=0;
+  31   1        INA2=0;
+  32   1        
+  33   1        INB1=1;
+  34   1        INB2=1;
+  35   1      }
+  36          
+  37          void nghich(){
+  38   1        INA1=1;
+  39   1        INA2=1;
+  40   1        
+  41   1        INB1=0;
+  42   1        INB2=0;
+  43   1      }
+  44          
+  45          void off(){
+  46   1        INA1=0;
+  47   1        INA2=0;
+  48   1        
+  49   1        INB1=0;
+  50   1        INB2=0;
+  51   1        
+  52   1      }
+  53          
+  54          int main(){
+C51 COMPILER V9.60.7.0   MAIN                                                              04/22/2025 09:08:51 PAGE 2   
+
+  55   1         LCD_Init();
+  56   1         LCD_Clear();
+  57   1         LCD_Gotoxy(0,0);
+  58   1         LCD_Puts("  Chon Chieu DC");
+  59   1         LCD_Gotoxy(0,1);
+  60   1         LCD_Puts("    Chon Mode");
+  61   1         while(1){
+  62   2           
+  63   2            if(ON_OFF==0) {
+  64   3              on_off=!on_off;
+  65   3                if(on_off==1){ 
+  66   4                thuan();
+  67   4                LCD_Gotoxy(0,1);
+  68   4                LCD_Puts("     DC: ON       ");
+  69   4                flag=1;
+  70   4              }
+  71   3              else {
+  72   4                off();
+  73   4                LCD_Gotoxy(0,1);
+  74   4                LCD_Puts("     DC: OFF      ");
+  75   4                flag=0;
+  76   4              }
+  77   3              delay(300);
+  78   3           }
+  79   2      
+  80   2          if(N==0 & flag==1){
+  81   3              thuan();
+  82   3              LCD_Gotoxy(0,1);
+  83   3              LCD_Puts("  Chieu: Thuan        ");
+  84   3              delay(300); }
+  85   2           else if (P==0 & flag==1){
+  86   3              nghich();
+  87   3              LCD_Gotoxy(0,1);
+  88   3              LCD_Puts("  Chieu: Nghich        ");
+  89   3              delay(300);    
+  90   3           }     
+  91   2           
+  92   2         }
+  93   1       }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    274    ----
+   CONSTANT SIZE    =    115    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      3    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

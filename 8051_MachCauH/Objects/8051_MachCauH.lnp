@@ -1,0 +1,4 @@
+".\Objects\main.obj",
+".\Objects\Thu_Vien_LCD.obj" 
+TO ".\Objects\8051_MachCauH" 
+PRINT(".\Listings\8051_MachCauH.m51")

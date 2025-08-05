@@ -1,0 +1,6 @@
+".\Objects\Main.obj",
+".\Objects\Void_Function.obj",
+".\Objects\UART.obj",
+".\Objects\Thu_Vien_LCD.obj" 
+TO ".\Objects\HE_DIEU_HANH_sEOS" 
+PRINT(".\Listings\HE_DIEU_HANH_sEOS.m51")

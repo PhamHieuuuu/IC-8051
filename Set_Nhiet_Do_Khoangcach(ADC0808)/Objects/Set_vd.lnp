@@ -1,0 +1,4 @@
+".\Objects\Main.obj",
+".\Objects\Thu_Vien_LCD.obj" 
+TO ".\Objects\Set_vd" 
+PRINT(".\Listings\Set_vd.m51")
